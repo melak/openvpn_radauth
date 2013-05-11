@@ -51,6 +51,6 @@ make WITH_SSL_IMPL=polarssl
 
 for the PolarSSL one.
 
-Cross-compilation using the OpenWRT SDK is possible. You will likely have to tweak with Makefile.rules.
+Cross-compilation using the OpenWRT SDK is possible. You will likely have to tweak Makefile.rules.
 
 Release tarballs for the moment live at <http://www.wormhole.hu/~ice/openvpn_radauth/>.
