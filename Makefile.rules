@@ -1,0 +1,78 @@
+
+ifeq ($(STAGING_DIR),)
+
+ifeq ($(strip $(TARGET)),ar71xx-aa)
+ROOT		:= /opt/ar71xx-12.09
+STAGING_DIR	:= $(ROOT)/staging_dir
+ARCHITECTURE	:= mips_r2
+COMPILERVER	:= 4.6-linaro
+LIBCVER		:= 0.9.33.2
+CROSS_ARCH	:= mips
+endif		# TARGET=ar71xx-aa
+
+ifeq ($(strip $(TARGET)),ar71xx-backfire)
+ROOT		:= /opt/ar71xx-10.03.1
+STAGING_DIR	:= $(ROOT)/staging_dir
+ARCHITECTURE	:= mips_r2
+COMPILERVER	:= 4.3.3+cs
+LIBCVER		:= 0.9.30.1
+CROSS_ARCH	:= mips
+endif		# TARGET=ar71xx-backfire
+
+ifneq ($(strip $(ROOT)),)
+TOOLCHAIN_DIR	:= $(STAGING_DIR)/toolchain-$(ARCHITECTURE)_gcc-$(COMPILERVER)_uClibc-$(LIBCVER)
+TARGET_DIR	:= $(STAGING_DIR)/target-$(ARCHITECTURE)_uClibc-$(LIBCVER)
+CROSS		:= $(CROSS_ARCH)-openwrt-linux-uclibc-
+
+PATH		:= $(PATH):$(TOOLCHAIN_DIR)/bin:$(TOOLCHAIN_DIR)/usr/bin
+
+CFLAGS		+= -I$(TARGET_DIR)/usr/include
+LDFLAGS		+= -L$(TARGET_DIR)/usr/lib
+CFLAGS		+= -DHAVE_STRL
+SUFFIX		:= _$(TARGET)
+endif		# ROOT!=""
+
+CC		:= $(CROSS)gcc
+LD		:= $(CC)
+LDD		 = $(CROSS)ldd
+NM		 = $(CROSS)nm
+SIZE		 = $(CROSS)size
+STRIP		 = $(CROSS)strip
+
+else
+
+CFLAGS		+= -DHAVE_STRL
+
+endif		# STAGING_DIR=""
+
+ifdef DEBUG
+CFLAGS		+= -g3 -ggdb3
+else
+CFLAGS		+= -Os
+endif
+
+export		STAGING_DIR CC LD LDD NM SIZE STRIP CFLAGS LDFLAGS
+
+CFLAGS		+= -fPIC -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes
+CFLAGS		+= -Wmissing-declarations -Wshadow -Wpointer-arith
+CFLAGS		+= -Wcast-qual -Wsign-compare -Wformat=2
+
+CFLAGS		+= -Wbad-function-cast -Werror-implicit-function-declaration
+CFLAGS		+= -Wfloat-equal -Wswitch-default -Wpacked
+CFLAGS		+= -Wdeclaration-after-statement -Winit-self -Winline
+CFLAGS		+= -Wpacked -Wlarger-than-65500 -Wunknown-pragmas
+CFLAGS		+= -Wmissing-format-attribute -Wmissing-noreturn
+CFLAGS		+= -Wnested-externs -Wold-style-definition -Wredundant-decls
+CFLAGS		+= -Wstrict-aliasing=2 -Wswitch-enum -Wundef -Wunreachable-code
+CFLAGS		+= -Wwrite-strings -Wcast-align -Wformat-nonliteral
+CFLAGS		+= -Wformat-security -Waggregate-return
+
+CFLAGS		+= -fno-common -Wp,-D_FORTIFY_SOURCE=2
+
+ifeq ($(filter $(TARGET),brcm-2.4),)
+CFLAGS		+= -Wmissing-field-initializers -Wmissing-include-dirs -Wunsafe-loop-optimizations
+endif
+
+CFLAGS		+= -D_BSD_SOURCE
+
+# vim: syntax=make
