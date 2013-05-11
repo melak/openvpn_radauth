@@ -11,7 +11,7 @@ targeted toward scenarios where storage space is at a premium. Package feed for
 [OpenWRT](https://openwrt.org/) Attitude Adjustment (and eventually newer versions)
 is available at [melak/openwrt-feeds](http://github.com/melak/openwrt-feeds).
 
-## Configuration
+## &#x1f435; Configuration
 
 Include
 
