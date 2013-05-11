@@ -9,7 +9,7 @@ A (the?) RADIUS **_plugin_** is available at [NonGNU](http://savannah.nongnu.org
 The plugin is likely to be more powerful, it is also _much_ larger. This script is
 targeted toward scenarios where storage space is at a premium. Package feed for
 [OpenWRT](https://openwrt.org/) Attitude Adjustment (and eventually newer versions)
-is available at melak/openwrt-feeds.
+is available at [melak/openwrt-feeds](http://github.com/melak/openwrt-feeds).
 
 ## Configuration
 
