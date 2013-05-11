@@ -34,6 +34,8 @@ There is no way at present to use different RADIUS servers with separate OpenVPN
 (save for having a dedicated openvpn_radauth for each and every one of them). Should there be
 demand for such a feature, it is possible to implement something to that effect.
 
+# Building
+
 libradius has been slightly modified so that it is able to use either OpenSSL or PolarSSL,
 just like OpenVPN is in later versions. Issue
 
@@ -48,5 +50,7 @@ make WITH_SSL_IMPL=polarssl
 ```
 
 for the PolarSSL one.
+
+Cross-compilation using the OpenWRT SDK is possible. You will likely have to tweak with Makefile.rules.
 
 Release tarballs for the moment live at <http://www.wormhole.hu/~ice/openvpn_radauth/>.
