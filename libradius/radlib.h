@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$FreeBSD: src/lib/libradius/radlib.h,v 1.7.30.2.2.1 2010/06/14 02:09:06 kensmith Exp $
+ *	$FreeBSD: releng/9.1/lib/libradius/radlib.h 234191 2012-04-12 17:49:53Z melifaro $
  */
 
 #ifndef _RADLIB_H_
@@ -195,6 +195,7 @@ struct rad_handle	*rad_acct_open(void);
 int			 rad_add_server(struct rad_handle *,
 			    const char *, int, const char *, int, int);
 struct rad_handle	*rad_auth_open(void);
+void			 rad_bind_to(struct rad_handle *, in_addr_t);
 void			 rad_close(struct rad_handle *);
 int			 rad_config(struct rad_handle *, const char *);
 int			 rad_continue_send_request(struct rad_handle *, int,

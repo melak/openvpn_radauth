@@ -23,7 +23,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$FreeBSD: src/lib/libradius/radlib_private.h,v 1.6.30.2.2.1 2010/06/14 02:09:06 kensmith Exp $
+ *	$FreeBSD: releng/9.1/lib/libradius/radlib_private.h 234191 2012-04-12 17:49:53Z melifaro $
  */
 
 #ifndef RADLIB_PRIVATE_H
@@ -92,6 +92,7 @@ struct rad_handle {
 	int		 try;		/* How many requests we've sent */
 	int		 srv;		/* Server number we did last */
 	int		 type;		/* Handle type */
+	in_addr_t	 bindto;	/* Bind to address */
 };
 
 struct vendor_attribute {

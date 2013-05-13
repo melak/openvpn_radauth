@@ -23,7 +23,7 @@
 .\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 .\" SUCH DAMAGE.
 .\"
-.\" $FreeBSD: src/lib/libradius/libradius.3,v 1.17.30.2.2.1 2010/06/14 02:09:06 kensmith Exp $
+.\" $FreeBSD: releng/9.1/lib/libradius/libradius.3 235575 2012-05-18 00:31:20Z gjb $
 .\"
 .Dd August 5, 2009
 .Dt LIBRADIUS 3
@@ -91,6 +91,8 @@
 .Fn rad_server_open "int fd"
 .Ft "const char *"
 .Fn rad_server_secret "struct rad_handle *h"
+.Ft "void"
+.Fn rad_bind_to "struct rad_handle *h" "in_addr_t addr"
 .Ft u_char *
 .Fn rad_demangle "struct rad_handle *h" "const void *mangled" "size_t mlen"
 .Ft u_char *
@@ -106,8 +108,7 @@ allows clients to perform authentication and accounting by means of
 network requests to remote servers.
 .Ss Initialization
 To use the library, an application must first call
-.Fn rad_auth_open
-,
+.Fn rad_auth_open ,
 .Fn rad_acct_open
 or
 .Fn rad_server_open
@@ -117,8 +118,7 @@ which provides the context for subsequent operations.
 The former function is used for RADIUS authentication and the
 latter is used for RADIUS accounting.
 Calls to
-.Fn rad_auth_open
-,
+.Fn rad_auth_open ,
 .Fn rad_acct_open
 and
 .Fn rad_server_open
@@ -431,6 +431,10 @@ returns the secret shared with the current RADIUS server according to the
 supplied rad_handle.
 .Pp
 The
+.Fn rad_bind_to
+assigns a source address for all requests to the current RADIUS server.
+.Pp
+The
 .Fn rad_demangle
 function demangles attributes containing passwords and MS-CHAPv1 MPPE-Keys.
 The return value is
@@ -464,7 +468,7 @@ subsequent library calls using the same handle.
 To free the resources used by the RADIUS library, call
 .Fn rad_close .
 .Ss Server operation
-Server mode operates much alike to client mode, except packet send and receieve
+Server mode operates much alike to client mode, except packet send and receive
 steps are swapped. To operate as server you should obtain server context with
 .Fn rad_server_open
 function, passing opened and bound UDP socket file descriptor as argument.
@@ -481,7 +485,7 @@ To respond to the request you should call
 .Fn rad_create_response
 and fill response content with same packet writing functions as for client.
 When packet is ready, it should be sent with
-.Fn rad_send_response
+.Fn rad_send_response .
 .Sh RETURN VALUES
 The following functions return a non-negative value on success.
 If
