@@ -57,6 +57,9 @@ int main( int argc, char **argv )
 	}
 
 out:
+	memset(username, 0, OPENVPN_USERPASS_LEN);
+	memset(password, 0, OPENVPN_USERPASS_LEN);
+
 	closelog();
 	return res;
 }
@@ -109,9 +112,6 @@ int check_radius( const char *username, const char *password )
 out:
 	if( rh )
 		rad_close( rh );
-
-	memset(username, 0, OPENVPN_USERPASS_LEN);
-	memset(password, 0, OPENVPN_USERPASS_LEN);
 
 	return res;
 }
