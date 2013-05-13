@@ -110,5 +110,8 @@ out:
 	if( rh )
 		rad_close( rh );
 
+	memset(username, 0, OPENVPN_USERPASS_LEN);
+	memset(password, 0, OPENVPN_USERPASS_LEN);
+
 	return res;
 }
