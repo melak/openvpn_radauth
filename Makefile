@@ -14,7 +14,6 @@ LDFLAGS		+= -lcrypto
 endif
 
 export		WITH_SSL_IMPL
-$(info *** CFLAGS=[$(CFLAGS)] ***)
 
 ifeq ($(filter -DHAVE_STRL,$(CFLAGS)),)
 SRC		+= compat/strl.c
