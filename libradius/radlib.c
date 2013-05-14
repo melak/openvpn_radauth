@@ -171,7 +171,7 @@ insert_message_authenticator(struct rad_handle *h, int resp)
 		__md5_hmac_update(&ctx, &h->out[POS_ATTRS],
 		    h->out_len - POS_ATTRS);
 		__md5_hmac_finish(&ctx, md, &md_len);
-		memcpy(&h->out[h->authentic_pos + 2], md, __md5_digest_length);
+		memcpy(&h->out[h->authentic_pos + 2], md, md_len);
 	}
 }
 
