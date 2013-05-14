@@ -3,10 +3,10 @@
 t="./openvpn_radauth"
 radius_conf="/etc/openvpn/radius.conf"
 
-ok_username="ice"
-ok_password="l0fasz"
-bad_username="icex"
-bad_password="lofaszx"
+ok_username="okuser"
+ok_password="okpass"
+bad_username="baduser"
+bad_password="badpass"
 nonexistent_username="nouser"
 
 success=0
