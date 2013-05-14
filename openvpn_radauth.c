@@ -31,7 +31,7 @@
 #define OPENVPN_USERPASS_LEN		128
 
 extern char *__progname;
-int check_radius( const char *, const char * );
+static int check_radius( const char *, const char * );
 
 int main( int argc, char **argv )
 {
@@ -57,14 +57,14 @@ int main( int argc, char **argv )
 	}
 
 out:
-	memset(username, 0, OPENVPN_USERPASS_LEN);
-	memset(password, 0, OPENVPN_USERPASS_LEN);
+	memset( username, 0, OPENVPN_USERPASS_LEN );
+	memset( password, 0, OPENVPN_USERPASS_LEN );
 
 	closelog();
 	return res;
 }
 
-int check_radius( const char *username, const char *password )
+static int check_radius( const char *username, const char *password )
 {
 	struct rad_handle *rh;
 	int res, rad_res;
@@ -110,8 +110,9 @@ int check_radius( const char *username, const char *password )
 	syslog( LOG_INFO, "RADIUS %sed %s", res == 1 ? "accept" : "reject", username );
 
 out:
-	if( rh )
+	if( rh ) {
 		rad_close( rh );
+	}
 
 	return res;
 }

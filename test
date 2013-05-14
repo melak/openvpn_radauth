@@ -1,0 +1,110 @@
+#!/bin/sh
+
+t="./openvpn_radauth"
+radius_conf="/etc/openvpn/radius.conf"
+
+ok_username="ice"
+ok_password="l0fasz"
+bad_username="icex"
+bad_password="lofaszx"
+nonexistent_username="nouser"
+
+success=0
+failure=1
+
+test_via_env()
+{
+	username="$1"
+	password="$2"
+	exp=$3
+
+	for ipparam in "" untrusted_ip="127.0.0.1"
+	do
+		env -i \
+			username="${username}" \
+			password="${password}" \
+			${ipparam} \
+		"${t}"
+	done
+
+	if [ $? -ne ${exp} ]
+	then
+		echo "via-env failed test username=[${username}] password=[${password}]"
+	fi
+}
+
+test_via_file()
+{
+	username="$1"
+	password="$2"
+	exp=$3
+
+	passfile="$( mktemp /tmp/${0##*/}.XXXXXX )"
+
+	printf '%s\r\n' "${username}" > "${passfile}"
+	printf '%s\r\n' "${password}" >> "${passfile}"
+
+	for ipparam in "" untrusted_ip="127.0.0.1"
+	do
+		env -i \
+			${ipparam} \
+			"${t}" "${passfile}"
+	done
+
+	if [ $? -ne ${exp} ]
+	then
+		echo "via-file failed test username=[${username}] password=[${password}]"
+	fi
+
+	rm -f "${passfile}"
+}
+
+test()
+{
+	if [ ${3} -eq ${failure} ]
+	then
+		logger -p auth.info -t openvpn_bsdauth-TEST "Expect four FAILUREs"
+	elif [ ${3} -eq ${success} ]
+	then
+		logger -p auth.info -t openvpn_bsdauth-TEST "Expect four SUCCESSes"
+	fi
+
+	logger -p auth.info -t openvpn_bsdauth-TEST "testing username=[${1}] password=[${2}] via-file"
+	test_via_file "$@"
+	logger -p auth.info -t openvpn_bsdauth-TEST "testing username=[${1}] password=[${2}] via-env"
+	test_via_env "$@"
+}
+
+if [ ! -x ${t} ]
+then
+	echo "test subject ${t} is awol"
+	exit
+fi
+if [ ! -r ${radius_conf} ]
+then
+	echo "${radius_conf} is missing or unreadable"
+	exit
+fi
+
+logger -p auth.info -t openvpn_bsdauth-TEST "started testing"
+echo "started testing, watch authlog"
+
+test "" "" ${failure}
+test "" "${ok_password}" ${failure}
+test "" "${bad_password}" ${failure}
+
+test "${ok_username}" "" ${failure}
+test "${ok_username}" "${bad_password}" ${failure}
+test "${ok_username}" "${ok_password}" ${success}
+
+test "${bad_username}" "" ${failure}
+test "${bad_username}" "${bad_password}" ${failure}
+test "${bad_username}" "${ok_password}" ${failure}
+
+test "${nonexistent_username}" "" ${failure}
+test "${nonexistent_username}" "${bad_password}" ${failure}
+test "${nonexistent_username}" "${ok_password}" ${failure}
+
+echo "finished testing"
+logger -p auth.info -t openvpn_bsdauth-TEST "tests finished"
+

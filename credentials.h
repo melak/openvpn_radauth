@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2009-2010 Tamas Tevesz <ice@extreme.hu>
+ * Copyright (c) 2007, 2009-2013 Tamas Tevesz <ice@extreme.hu>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,5 +14,5 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-int getcreds( int, char **, char *, char *, size_t );
+int getcreds( int argc, char **argv, char *username, char *password, size_t buflen );
 const char *peer_address( void );

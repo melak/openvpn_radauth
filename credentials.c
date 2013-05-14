@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, 2009-2010 Tamas Tevesz <ice@extreme.hu>
+ * Copyright (c) 2007, 2009-2013 Tamas Tevesz <ice@extreme.hu>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -30,10 +30,11 @@ int getcreds( int argc, char **argv, char *username, char *password, size_t bufl
 	int res;
 	char *uenv, *penv;
 
-	(void)memset( username, 0, buflen );
-	(void)memset( password, 0, buflen );
 	res = -1;
 	uenv = penv = NULL;
+
+	memset( username, 0, buflen );
+	memset( password, 0, buflen );
 
 	uenv = getenv( "username" );
 	penv = getenv( "password" );
@@ -102,7 +103,6 @@ int getcreds( int argc, char **argv, char *username, char *password, size_t bufl
 		syslog( LOG_ERR, "Unable to get credentials from OpenVPN" );
 	}
 
-
 out:
 	return res;
 }
@@ -113,15 +113,16 @@ const char *peer_address( void ) {
 
 	if( ipenv != NULL &&
 	    *ipenv != '\0' ) {
-		return ipenv;
+		goto out;
 	}
 
 	ipenv = getenv( "untrusted_ip" );
 
-	if( ipenv == NULL ||
+	if( ipenv != NULL &&
 	    *ipenv == '\0' ) {
-		return NULL;
+		ipenv = NULL;
 	}
 
+out:
 	return ipenv;
 }
