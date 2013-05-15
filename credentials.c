@@ -43,12 +43,16 @@ int getcreds( int argc, char **argv, char *username, char *password, size_t bufl
 
 		if( strlcpy( username, uenv, buflen ) >= buflen ||
 		    strlcpy( password, penv, buflen ) >= buflen ) {
+#ifdef DEBUG
 			syslog( LOG_ERR, "Error: username/password buffer too small" );
+#endif
 			goto out;
 		}
 
 		if( *username == '\0' || *password == '\0' ) {
+#ifdef DEBUG
 			syslog( LOG_ERR, "Got zero-length username or password" );
+#endif
 			goto out;
 		}
 
@@ -62,20 +66,26 @@ int getcreds( int argc, char **argv, char *username, char *password, size_t bufl
 
 		fp = fopen( argv[ 1 ], "r" );
 		if( fp == NULL ) {
+#ifdef DEBUG
 			syslog( LOG_ERR, "Unable to open password file \"%s\"", argv[ 1 ] );
+#endif
 			goto out;
 		}
 
 		bufp = fgets( username, buflen, fp );
 		if( bufp == NULL || *bufp == '\r' || *bufp == '\n' ) {
+#ifdef DEBUG
 			syslog( LOG_ERR, "Unable to read username from \"%s\"", argv[ 1 ] );
+#endif
 			fclose( fp );
 			goto out;
 		}
 
 		bufp = fgets( password, buflen, fp );
 		if( bufp == NULL ) {
+#ifdef DEBUG
 			syslog( LOG_ERR, "Unable to read password from \"%s\"", argv[ 1 ] );
+#endif
 			fclose( fp );
 			goto out;
 		}
@@ -84,14 +94,18 @@ int getcreds( int argc, char **argv, char *username, char *password, size_t bufl
 
 		if( *username == '\r' || *username == '\n' ||
 		    *password == '\r' || *username == '\n' ) {
+#ifdef DEBUG
 			syslog( LOG_ERR, "Got zero-length username or password" );
+#endif
 			goto out;
 		}
 
 		ubuf_eol = strcspn( username, "\r\n" );
 		pbuf_eol = strcspn( password, "\r\n" );
 		if( username[ ubuf_eol ] == '\0' || password[ pbuf_eol ] == '\0' ) {
+#ifdef DEBUG
 			syslog( LOG_ERR, "Error: username/password buffer too small" );
+#endif
 			goto out;
 		}
 
@@ -100,7 +114,9 @@ int getcreds( int argc, char **argv, char *username, char *password, size_t bufl
 		res = 0;
 
 	} else {
+#ifdef DEBUG
 		syslog( LOG_ERR, "Unable to get credentials from OpenVPN" );
+#endif
 	}
 
 out:

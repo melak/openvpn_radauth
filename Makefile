@@ -22,6 +22,10 @@ endif
 OBJS		+= $(SRC:.c=.o)
 PROG		 = $(firstword $(SRC:.c=))$(SUFFIX)
 
+ifdef BUILD_DEBUG
+CFLAGS		+= -DDEBUG
+endif
+
 all:		clean $(PROG) strip
 
 strip:		$(PROG)

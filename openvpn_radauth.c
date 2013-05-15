@@ -43,7 +43,9 @@ int main( int argc, char **argv )
 	openlog( __progname, LOG_PID|LOG_NDELAY, LOG_AUTH );
 
 	if( getcreds( argc, argv, username, password, OPENVPN_USERPASS_LEN ) < 0 ) {
+#ifdef DEBUG
 		syslog( LOG_ERR, "Unable to get supplied credentials" );
+#endif
 		goto out;
 	}
 
@@ -107,7 +109,9 @@ static int check_radius( const char *username, const char *password )
 		res = 1;
 	}
 
+#ifdef DEBUG
 	syslog( LOG_INFO, "RADIUS %sed %s", res == 1 ? "accept" : "reject", username );
+#endif
 
 out:
 	if( rh ) {
