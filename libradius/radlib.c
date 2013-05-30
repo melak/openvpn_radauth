@@ -155,6 +155,7 @@ insert_request_authenticator(struct rad_handle *h, int resp)
 static void
 insert_message_authenticator(struct rad_handle *h, int resp)
 {
+#ifdef __has_md5_hmac__
 	u_char md[__md5_digest_length];
 	u_int md_len;
 	const struct rad_server *srvp;
@@ -173,6 +174,7 @@ insert_message_authenticator(struct rad_handle *h, int resp)
 		__md5_hmac_finish(&ctx, md, &md_len);
 		memcpy(&h->out[h->authentic_pos + 2], md, md_len);
 	}
+#endif /* __has_md5_hmac__ */
 }
 
 /*
@@ -187,7 +189,9 @@ is_valid_response(struct rad_handle *h, int srv,
 	unsigned char md5x[__md5_digest_length];
 	const struct rad_server *srvp;
 	int len;
+#ifdef __has_md5_hmac__
 	__md5_hmac_ctx hctx;
+#endif
 	u_char resp[MSGSIZE], md[__md5_digest_length];
 	u_int md_len;
 	int pos;
@@ -266,7 +270,9 @@ is_valid_request(struct rad_handle *h)
 	unsigned char md5x[__md5_digest_length];
 	const struct rad_server *srvp;
 	int len;
+#ifdef __has_md5_hmac__
 	__md5_hmac_ctx hctx;
+#endif
 	u_char resp[MSGSIZE], md[__md5_digest_length];
 	u_int md_len;
 	int pos;

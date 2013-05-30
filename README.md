@@ -4,7 +4,7 @@ A small helper application that makes it possible to authenticate
 [OpenVPN](http://openvpn.net/) against a [RADIUS](http://en.wikipedia.org/wiki/RADIUS)
 server.
 
-**This is _not an OpenVPN plugin_**. This is an _auth-user-pass-verify **script**_.
+**This is _not_ an OpenVPN _plugin_**. This is an _auth-user-pass-verify **script**_.
 A (the?) RADIUS **_plugin_** is available at [NonGNU](http://savannah.nongnu.org/projects/radiusplugin).
 The plugin is likely to be more powerful, it is also _much_ larger. This script is
 targeted toward scenarios where storage space is at a premium. Package feed for
@@ -43,13 +43,15 @@ just like OpenVPN is in later versions. Issue
 make WITH_SSL_IMPL=openssl
 ```
 
-for the OpenSSL version (default) or
+for the OpenSSL version or
 
 ```
 make WITH_SSL_IMPL=polarssl
 ```
 
-for the PolarSSL one.
+for the PolarSSL one. Not specifying an SSL implementation to use compiles a bundled RSA MD5
+library (also snatched from FreeBSD) and bars libradius from creating/verifying authentic
+RADIUS messages. This should not, in general, affect the operation of openvpn_radauth.
 
 Cross-compilation using the OpenWRT SDK is possible. You will likely have to tweak Makefile.rules.
 

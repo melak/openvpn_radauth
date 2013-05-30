@@ -96,11 +96,13 @@ static int check_radius( const char *username, const char *password )
 		goto out;
 	}
 
+#if defined( WITH_SSL ) || defined( WITH_POLARSSL )
 	if( rad_put_message_authentic( rh ) < 0 ) {
 		syslog( LOG_ERR, "Unable to add Message-Authenticator to RADIUS request: %s",
 			rad_strerror( rh ) );
 		goto out;
 	}
+#endif
 
 	rad_res = rad_send_request( rh );
 	if( rad_res < 0 ) {

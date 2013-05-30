@@ -2,7 +2,7 @@
 include		 Makefile.rules
 
 SRC		 = openvpn_radauth.c credentials.c
-OBJS		 = $(SRC:.c=.o) libradius/radlib.o
+OBJS		 = $(SRC:.c=.o) libradius/libradius.a
 PROG		 = $(SRC:.c=)$(SUFFIX)
 
 CFLAGS		+= -I$(CURDIR)/libradius
@@ -10,7 +10,9 @@ CFLAGS		+= -I$(CURDIR)/libradius
 ifeq ($(WITH_SSL_IMPL),polarssl)
 LDFLAGS		+= -lpolarssl
 else
+ifeq ($(WITH_SSL_IMPL),openssl)
 LDFLAGS		+= -lcrypto
+endif
 endif
 
 export		WITH_SSL_IMPL
@@ -39,7 +41,7 @@ endif
 compat/%.o:
 		$(MAKE) -C compat
 
-libradius/radlib.o:
+libradius/libradius.a:
 		$(MAKE) -C libradius
 
 $(PROG):	clean $(OBJS)
