@@ -1,5 +1,5 @@
 /* MD5.H - header file for MD5C.C
- * $FreeBSD: releng/9.1/sys/sys/md5.h 156752 2006-03-15 19:47:12Z andre $
+ * $FreeBSD: releng/10.2/sys/sys/md5.h 156752 2006-03-15 19:47:12Z andre $
  */
 
 /*-
@@ -25,8 +25,8 @@ These notices must be retained in any copies of any part of this
 documentation and/or software.
  */
 
-#ifndef _MD5_H_
-#define _MD5_H_
+#ifndef _SYS_MD5_H_
+#define _SYS_MD5_H_
 
 #define MD5_BLOCK_LENGTH		64
 #define MD5_DIGEST_LENGTH		16
@@ -50,4 +50,4 @@ char * MD5File(const char *, char *);
 char * MD5FileChunk(const char *, char *, off_t, off_t);
 char * MD5Data(const void *, unsigned int, char *);
 __END_DECLS
-#endif /* _MD5_H_ */
+#endif /* _SYS_MD5_H_ */

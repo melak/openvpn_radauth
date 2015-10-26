@@ -28,7 +28,7 @@
 
 #include <sys/cdefs.h>
 #ifdef __FreeBSD__
-__FBSDID("$FreeBSD: releng/9.1/lib/libmd/md5c.c 154479 2006-01-17 15:35:57Z phk $");
+__FBSDID("$FreeBSD: releng/10.2/lib/libmd/md5c.c 154479 2006-01-17 15:35:57Z phk $");
 #endif
 
 #include <sys/types.h>
