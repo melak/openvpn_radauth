@@ -32,7 +32,7 @@ CFLAGS		+= -DHAVE_STRL
 SUFFIX		:= _$(TARGET)
 endif		# ROOT!=""
 
-CC		:= $(CROSS)gcc
+CC		:= $(CROSS)$(CC)
 LD		:= $(CC)
 LDD		 = $(CROSS)ldd
 NM		 = $(CROSS)nm
