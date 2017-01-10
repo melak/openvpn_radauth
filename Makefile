@@ -40,7 +40,7 @@ all:		clean $(PROG) strip
 
 strip:		$(PROG)
 ifndef DEBUG
-		$(STRIP) $(PROG)
+		strip $(PROG)
 endif
 
 %.o:		%.c
