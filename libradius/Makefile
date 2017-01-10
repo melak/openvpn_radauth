@@ -9,8 +9,12 @@ else
 ifeq ($(WITH_SSL_IMPL),openssl)
 CFLAGS		+= -DWITH_SSL
 else
+ifeq ($(WITH_SSL_IMPL),mbedtls)
+CFLAGS		+= -DWITH_MBEDTLS
+else
 SRCS		+= md5c.c
 CFLAGS		+= -I.
+endif
 endif
 endif
 

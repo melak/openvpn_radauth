@@ -12,6 +12,10 @@ LDFLAGS		+= -lpolarssl
 else
 ifeq ($(WITH_SSL_IMPL),openssl)
 LDFLAGS		+= -lcrypto
+else
+ifeq ($(WITH_SSL_IMPL),mbedtls)
+LDFLAGS		+= -lmbedcrypto
+endif
 endif
 endif
 

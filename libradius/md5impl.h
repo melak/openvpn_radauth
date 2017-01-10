@@ -74,6 +74,30 @@
 							md5_hmac_reset(ctx);				\
 						} while(0)
 
+#elif defined(WITH_MBEDTLS)
+
+#include <mbedtls/md.h>
+#include <mbedtls/md5.h>
+
+#define __md5_digest_length			16
+#define __md5_ctx				mbedtls_md5_context
+
+#define __md5_init(ctx)				mbedtls_md5_starts(ctx)
+#define __md5_update(ctx, data, length)		mbedtls_md5_update(ctx, data, length)
+#define __md5_finish(ctx, result)		mbedtls_md5_finish(ctx, result)
+
+#define __has_md5_hmac__			1
+
+#define __md5_hmac_ctx				mbedtls_md5_context
+
+#define __md5_hmac_init(ctx, key, length)	mbedtls_md_hmac_starts(ctx, key, length)
+#define __md5_hmac_update(ctx, data, length)	mbedtls_md_hmac_update(ctx, data, length)
+#define __md5_hmac_finish(ctx, result, length)	do {							\
+							*(u_int *)(length) = __md5_digest_length;	\
+							mbedtls_md_hmac_finish(ctx, result);		\
+							mbedtls_md_hmac_reset(ctx);			\
+						} while(0)
+
 #else /* libmd */
 
 #include <md5.h>
