@@ -1,7 +1,7 @@
 #!/bin/sh
 
 t="./openvpn_radauth"
-radius_conf="/etc/openvpn/radius.conf"
+radius_conf="$( pwd )/test/radius.conf"
 
 ok_username="okuser"
 ok_password="okpass"
@@ -11,6 +11,8 @@ nonexistent_username="nouser"
 
 success=0
 failure=1
+
+errors=0
 
 test_via_env()
 {
@@ -54,6 +56,7 @@ test_via_file()
 	if [ $? -ne ${exp} ]
 	then
 		echo "via-file failed test username=[${username}] password=[${password}]"
+		errors=$(( errors + 1 ))
 	fi
 
 	rm -f "${passfile}"
@@ -61,17 +64,9 @@ test_via_file()
 
 test()
 {
-	if [ ${3} -eq ${failure} ]
-	then
-		logger -p auth.info -t openvpn_bsdauth-TEST "Expect four FAILUREs"
-	elif [ ${3} -eq ${success} ]
-	then
-		logger -p auth.info -t openvpn_bsdauth-TEST "Expect four SUCCESSes"
-	fi
-
-	logger -p auth.info -t openvpn_bsdauth-TEST "testing username=[${1}] password=[${2}] via-file"
+	echo "testing username=[${1}] password=[${2}] via-file"
 	test_via_file "$@"
-	logger -p auth.info -t openvpn_bsdauth-TEST "testing username=[${1}] password=[${2}] via-env"
+	echo "testing username=[${1}] password=[${2}] via-env"
 	test_via_env "$@"
 }
 
@@ -86,7 +81,6 @@ then
 	exit
 fi
 
-logger -p auth.info -t openvpn_bsdauth-TEST "started testing"
 echo "started testing, watch authlog"
 
 test "" "" ${failure}
@@ -106,5 +100,13 @@ test "${nonexistent_username}" "${bad_password}" ${failure}
 test "${nonexistent_username}" "${ok_password}" ${failure}
 
 echo "finished testing"
-logger -p auth.info -t openvpn_bsdauth-TEST "tests finished"
+if [ ${errors} -eq 0 ]
+then
+	echo "all tests successful"
 
+	exit 0
+else
+	echo "some tests failed"
+
+	exit 1
+fi
