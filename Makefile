@@ -5,6 +5,8 @@ SRC		 = openvpn_radauth.c credentials.c
 OBJS		 = $(SRC:.c=.o) libradius/libradius.a
 PROG		 = $(SRC:.c=)$(SUFFIX)
 
+STRIP		?= strip
+
 CFLAGS		+= -I$(CURDIR)/libradius
 
 ifeq ($(WITH_SSL_IMPL),polarssl)
@@ -40,7 +42,7 @@ all:		clean $(PROG) strip
 
 strip:		$(PROG)
 ifndef DEBUG
-		strip $(PROG)
+		$(STRIP) $(PROG)
 endif
 
 %.o:		%.c
