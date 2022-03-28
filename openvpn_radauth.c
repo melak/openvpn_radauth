@@ -59,13 +59,8 @@ int main( int argc, char **argv )
 	}
 
 out:
-#ifdef HAVE_EXPLICIT_BZERO
 	explicit_bzero( username, OPENVPN_USERPASS_LEN );
 	explicit_bzero( password, OPENVPN_USERPASS_LEN );
-#else
-	memset( username, 0, OPENVPN_USERPASS_LEN );
-	memset( password, 0, OPENVPN_USERPASS_LEN );
-#endif
 
 	closelog();
 	return res;
