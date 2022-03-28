@@ -21,8 +21,8 @@
 
 #include "credentials.h"
 
-#ifndef HAVE_STRL
-#include "compat/strl.h"
+#ifdef __linux__
+#include <bsd/string.h>
 #endif
 
 int getcreds( int argc, char **argv, char *username, char *password, size_t buflen ) {
