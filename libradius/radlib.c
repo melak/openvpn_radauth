@@ -1,4 +1,6 @@
 /*-
+ * SPDX-License-Identifier: BSD-2-Clause-FreeBSD
+ *
  * Copyright 1998 Juniper Networks, Inc.
  * All rights reserved.
  *
@@ -27,7 +29,7 @@
 #include <sys/cdefs.h>
 
 #ifdef __FreeBSD__
-__FBSDID("$FreeBSD: src/lib/libradius/radlib.c,v 1.13.10.3.2.1 2010/06/14 02:09:06 kensmith Exp $");
+__FBSDID("$FreeBSD$");
 #endif
 
 #include <sys/types.h>
@@ -35,8 +37,29 @@ __FBSDID("$FreeBSD: src/lib/libradius/radlib.c,v 1.13.10.3.2.1 2010/06/14 02:09:
 #include <sys/time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#if 0
+#ifdef WITH_SSL
+#include <openssl/hmac.h>
+#include <openssl/md5.h>
+#define MD5Init MD5_Init
+#define MD5Update MD5_Update
+#define MD5Final MD5_Final
+#else
+#define MD5_DIGEST_LENGTH 16
+#include <md5.h>
+#endif
+#endif
 
-#include "md5impl.h"
+#ifdef __linux__
+#include <bsd/stdlib.h>
+#endif
+#include "picohash.h"
+#define MD5_DIGEST_LENGTH PICOHASH_MD5_DIGEST_LENGTH
+#define MD5_CTX picohash_ctx_t
+#define MD5Init picohash_init_md5
+#define MD5Update picohash_update
+#define MD5Final(a, b) picohash_final(b, a)
+#define WITH_SSL
 
 #define	MAX_FIELDS	7
 
@@ -84,7 +107,7 @@ static void
 clear_password(struct rad_handle *h)
 {
 	if (h->pass_len != 0) {
-		memset(h->pass, 0, h->pass_len);
+		explicit_bzero(h->pass, h->pass_len);
 		h->pass_len = 0;
 	}
 	h->pass_pos = 0;
@@ -103,8 +126,8 @@ generr(struct rad_handle *h, const char *format, ...)
 static void
 insert_scrambled_password(struct rad_handle *h, int srv)
 {
-	__md5_ctx ctx;
-	unsigned char md5x[__md5_digest_length];
+	MD5_CTX ctx;
+	unsigned char md5[MD5_DIGEST_LENGTH];
 	const struct rad_server *srvp;
 	int padded_len;
 	int pos;
@@ -112,15 +135,15 @@ insert_scrambled_password(struct rad_handle *h, int srv)
 	srvp = &h->servers[srv];
 	padded_len = h->pass_len == 0 ? 16 : (h->pass_len+15) & ~0xf;
 
-	memcpy(md5x, &h->out[POS_AUTH], LEN_AUTH);
+	memcpy(md5, &h->out[POS_AUTH], LEN_AUTH);
 	for (pos = 0;  pos < padded_len;  pos += 16) {
 		int i;
 
 		/* Calculate the new scrambler */
-		__md5_init(&ctx);
-		__md5_update(&ctx, srvp->secret, strlen(srvp->secret));
-		__md5_update(&ctx, md5x, __md5_digest_length);
-		__md5_finish(&ctx, md5x);
+		MD5Init(&ctx);
+		MD5Update(&ctx, srvp->secret, strlen(srvp->secret));
+		MD5Update(&ctx, md5, 16);
+		MD5Final(md5, &ctx);
 
 		/*
 		 * Mix in the current chunk of the password, and copy
@@ -130,53 +153,52 @@ insert_scrambled_password(struct rad_handle *h, int srv)
 		 */
 		for (i = 0;  i < 16;  i++)
 			h->out[h->pass_pos + pos + i] =
-			    md5x[i] ^= h->pass[pos + i];
+			    md5[i] ^= h->pass[pos + i];
 	}
 }
 
 static void
 insert_request_authenticator(struct rad_handle *h, int resp)
 {
-	__md5_ctx ctx;
+	MD5_CTX ctx;
 	const struct rad_server *srvp;
 
 	srvp = &h->servers[h->srv];
 
 	/* Create the request authenticator */
-	__md5_init(&ctx);
-	__md5_update(&ctx, &h->out[POS_CODE], POS_AUTH - POS_CODE);
+	MD5Init(&ctx);
+	MD5Update(&ctx, &h->out[POS_CODE], POS_AUTH - POS_CODE);
 	if (resp)
-	    __md5_update(&ctx, &h->in[POS_CODE], LEN_AUTH);
+	    MD5Update(&ctx, &h->in[POS_AUTH], LEN_AUTH);
 	else
-	    __md5_update(&ctx, &h->out[POS_AUTH], LEN_AUTH);
-	__md5_update(&ctx, &h->out[POS_ATTRS], h->out_len - POS_ATTRS);
-	__md5_update(&ctx, srvp->secret, strlen(srvp->secret));
-	__md5_finish(&ctx, &h->out[POS_AUTH]);
+	    MD5Update(&ctx, &h->out[POS_AUTH], LEN_AUTH);
+	MD5Update(&ctx, &h->out[POS_ATTRS], h->out_len - POS_ATTRS);
+	MD5Update(&ctx, srvp->secret, strlen(srvp->secret));
+	MD5Final(&h->out[POS_AUTH], &ctx);
 }
 
 static void
 insert_message_authenticator(struct rad_handle *h, int resp)
 {
-#ifdef __has_md5_hmac__
-	u_char md[__md5_digest_length];
-	u_int md_len;
+#ifdef WITH_SSL
+	u_char md[PICOHASH_MD5_DIGEST_LENGTH];
 	const struct rad_server *srvp;
-	__md5_hmac_ctx ctx;
+	picohash_ctx_t ctx;
 	srvp = &h->servers[h->srv];
 
 	if (h->authentic_pos != 0) {
-		__md5_hmac_init(&ctx, srvp->secret, strlen(srvp->secret));
-		__md5_hmac_update(&ctx, &h->out[POS_CODE], POS_AUTH - POS_CODE);
+		picohash_init_hmac(&ctx, picohash_init_md5, srvp->secret, strlen(srvp->secret));
+		picohash_update(&ctx, &h->out[POS_CODE], POS_AUTH - POS_CODE);
 		if (resp)
-		    __md5_hmac_update(&ctx, &h->in[POS_CODE], LEN_AUTH);
+		    picohash_update(&ctx, &h->in[POS_AUTH], LEN_AUTH);
 		else
-		    __md5_hmac_update(&ctx, &h->out[POS_AUTH], LEN_AUTH);
-		__md5_hmac_update(&ctx, &h->out[POS_ATTRS],
+		    picohash_update(&ctx, &h->out[POS_AUTH], LEN_AUTH);
+		picohash_update(&ctx, &h->out[POS_ATTRS],
 		    h->out_len - POS_ATTRS);
-		__md5_hmac_finish(&ctx, md, &md_len);
-		memcpy(&h->out[h->authentic_pos + 2], md, md_len);
+		picohash_final(&ctx, md);
+		memcpy(&h->out[h->authentic_pos + 2], md, sizeof md);
 	}
-#endif /* __has_md5_hmac__ */
+#endif
 }
 
 /*
@@ -187,14 +209,15 @@ static int
 is_valid_response(struct rad_handle *h, int srv,
     const struct sockaddr_in *from)
 {
-	__md5_ctx ctx;
-	unsigned char md5x[__md5_digest_length];
+	MD5_CTX ctx;
+	unsigned char md5[MD5_DIGEST_LENGTH];
 	const struct rad_server *srvp;
+
 	int len;
-#ifdef __has_md5_hmac__
-	__md5_hmac_ctx hctx;
-	u_char resp[MSGSIZE], md[__md5_digest_length];
-	u_int md_len;
+#ifdef WITH_SSL
+	int alen;
+	picohash_ctx_t hctx;
+	u_char resp[MSGSIZE], md[PICOHASH_MD5_DIGEST_LENGTH];
 	int pos;
 #endif
 
@@ -209,21 +232,21 @@ is_valid_response(struct rad_handle *h, int srv,
 	/* Check the message length */
 	if (h->in_len < POS_ATTRS)
 		return 0;
-	len = h->in[POS_LENGTH] << 8 | h->in[POS_LENGTH+1];
-	if (len > h->in_len)
+	len = (h->in[POS_LENGTH] << 8) | h->in[POS_LENGTH + 1];
+	if (len < POS_ATTRS || len > h->in_len)
 		return 0;
 
 	/* Check the response authenticator */
-	__md5_init(&ctx);
-	__md5_update(&ctx, &h->in[POS_CODE], POS_AUTH - POS_CODE);
-	__md5_update(&ctx, &h->out[POS_AUTH], LEN_AUTH);
-	__md5_update(&ctx, &h->in[POS_ATTRS], len - POS_ATTRS);
-	__md5_update(&ctx, srvp->secret, strlen(srvp->secret));
-	__md5_finish(&ctx, md5x);
-	if (memcmp(&h->in[POS_AUTH], md5x, sizeof md5x) != 0)
+	MD5Init(&ctx);
+	MD5Update(&ctx, &h->in[POS_CODE], POS_AUTH - POS_CODE);
+	MD5Update(&ctx, &h->out[POS_AUTH], LEN_AUTH);
+	MD5Update(&ctx, &h->in[POS_ATTRS], len - POS_ATTRS);
+	MD5Update(&ctx, srvp->secret, strlen(srvp->secret));
+	MD5Final(md5, &ctx);
+	if (memcmp(&h->in[POS_AUTH], md5, sizeof md5) != 0)
 		return 0;
 
-#ifdef __has_md5_hmac__
+#ifdef WITH_SSL
 	/*
 	 * For non accounting responses check the message authenticator,
 	 * if any.
@@ -235,29 +258,39 @@ is_valid_response(struct rad_handle *h, int srv,
 
 		/* Search and verify the Message-Authenticator */
 		while (pos < len - 2) {
-
 			if (h->in[pos] == RAD_MESSAGE_AUTHENTIC) {
-				/* zero fill the Message-Authenticator */
-				memset(&resp[pos + 2], 0, __md5_digest_length);
-
-				__md5_hmac_init(&hctx, srvp->secret,
-				    strlen(srvp->secret));
-				__md5_hmac_update(&hctx, &h->in[POS_CODE],
-				    POS_AUTH - POS_CODE);
-				__md5_hmac_update(&hctx, &h->out[POS_AUTH],
-				    LEN_AUTH);
-				__md5_hmac_update(&hctx, &resp[POS_ATTRS],
-				    h->in_len - POS_ATTRS);
-				__md5_hmac_finish(&hctx, md, &md_len);
-				if (memcmp(md, &h->in[pos + 2],
-				    __md5_digest_length) != 0)
+				if (h->in[pos + 1] != MD5_DIGEST_LENGTH + 2) {
 					return 0;
+				}
+				if (len - pos < MD5_DIGEST_LENGTH + 2) {
+					return 0;
+				}
+
+				memset(&resp[pos + 2], 0, MD5_DIGEST_LENGTH);
+
+				picohash_init_hmac(&hctx, picohash_init_md5,
+				    srvp->secret, strlen(srvp->secret));
+				picohash_update(&hctx, &h->in[POS_CODE],
+				    POS_AUTH - POS_CODE);
+				picohash_update(&hctx, &h->out[POS_AUTH],
+				    LEN_AUTH);
+				picohash_update(&hctx, &resp[POS_ATTRS],
+				    h->in_len - POS_ATTRS);
+				picohash_final(&hctx, md);
+				if (memcmp(md, &h->in[pos + 2],
+				    MD5_DIGEST_LENGTH) != 0) {
+					return 0;
+				}
 				break;
 			}
-			pos += h->in[pos + 1];
+			alen = h->in[pos + 1];
+			if (alen < 2) {
+				return 0;
+			}
+			pos += alen;
 		}
 	}
-#endif /* __has_hmac_md5__ */
+#endif
 	return 1;
 }
 
@@ -267,14 +300,14 @@ is_valid_response(struct rad_handle *h, int srv,
 static int
 is_valid_request(struct rad_handle *h)
 {
-	__md5_ctx ctx;
-	unsigned char md5x[__md5_digest_length];
+	MD5_CTX ctx;
+	unsigned char md5[MD5_DIGEST_LENGTH];
 	const struct rad_server *srvp;
 	int len;
-#ifdef __has_md5_hmac__
-	__md5_hmac_ctx hctx;
-	u_char resp[MSGSIZE], md[__md5_digest_length];
-	u_int md_len;
+#ifdef WITH_SSL
+	int alen;
+	picohash_ctx_t hctx;
+	u_char resp[MSGSIZE], md[PICOHASH_MD5_DIGEST_LENGTH];
 	int pos;
 #endif
 
@@ -283,47 +316,57 @@ is_valid_request(struct rad_handle *h)
 	/* Check the message length */
 	if (h->in_len < POS_ATTRS)
 		return (0);
-	len = h->in[POS_LENGTH] << 8 | h->in[POS_LENGTH+1];
-	if (len > h->in_len)
+	len = (h->in[POS_LENGTH] << 8) | h->in[POS_LENGTH + 1];
+	if (len < POS_ATTRS || len > h->in_len)
 		return (0);
 
 	if (h->in[POS_CODE] != RAD_ACCESS_REQUEST) {
 		uint32_t zeroes[4] = { 0, 0, 0, 0 };
 		/* Check the request authenticator */
-		__md5_init(&ctx);
-		__md5_update(&ctx, &h->in[POS_CODE], POS_AUTH - POS_CODE);
-		__md5_update(&ctx, zeroes, LEN_AUTH);
-		__md5_update(&ctx, &h->in[POS_ATTRS], len - POS_ATTRS);
-		__md5_update(&ctx, srvp->secret, strlen(srvp->secret));
-		__md5_finish(&ctx, md5x);
-		if (memcmp(&h->in[POS_AUTH], md5x, sizeof md5x) != 0)
+		MD5Init(&ctx);
+		MD5Update(&ctx, &h->in[POS_CODE], POS_AUTH - POS_CODE);
+		MD5Update(&ctx, zeroes, LEN_AUTH);
+		MD5Update(&ctx, &h->in[POS_ATTRS], len - POS_ATTRS);
+		MD5Update(&ctx, srvp->secret, strlen(srvp->secret));
+		MD5Final(md5, &ctx);
+		if (memcmp(&h->in[POS_AUTH], md5, sizeof md5) != 0)
 			return (0);
 	}
 
-#ifdef __has_md5_hmac__
+#ifdef WITH_SSL
 	/* Search and verify the Message-Authenticator */
 	pos = POS_ATTRS;
 	while (pos < len - 2) {
+		alen = h->in[pos + 1];
+		if (alen < 2)
+			return (0);
 		if (h->in[pos] == RAD_MESSAGE_AUTHENTIC) {
+			if (len - pos < MD5_DIGEST_LENGTH + 2) {
+				return (0);
+			}
+			if (alen < MD5_DIGEST_LENGTH + 2) {
+				return (0);
+			}
 			memcpy(resp, h->in, MSGSIZE);
 			/* zero fill the Request-Authenticator */
 			if (h->in[POS_CODE] != RAD_ACCESS_REQUEST)
 				memset(&resp[POS_AUTH], 0, LEN_AUTH);
 			/* zero fill the Message-Authenticator */
-			memset(&resp[pos + 2], 0, __md5_digest_length);
+			memset(&resp[pos + 2], 0, MD5_DIGEST_LENGTH);
 
-			__md5_hmac_init(&hctx, srvp->secret,
+			picohash_init_hmac(&hctx, picohash_init_md5, srvp->secret,
 			    strlen(srvp->secret));
-			__md5_hmac_update(&hctx, resp, h->in_len);
-			__md5_hmac_finish(&hctx, md, &md_len);
+			picohash_update(&hctx, resp, h->in_len);
+			picohash_final(&hctx, md);
 			if (memcmp(md, &h->in[pos + 2],
-			    __md5_digest_length) != 0)
+			    MD5_DIGEST_LENGTH) != 0) {
 				return (0);
+			}
 			break;
 		}
-		pos += h->in[pos + 1];
+		pos += alen;
 	}
-#endif /* __has_md5_hmac__ */
+#endif
 	return (1);
 }
 
@@ -849,8 +892,8 @@ rad_create_request(struct rad_handle *h, int code)
 	if (code == RAD_ACCESS_REQUEST) {
 		/* Create a random authenticator */
 		for (i = 0;  i < LEN_AUTH;  i += 2) {
-			long r;
-			r = random();
+			uint32_t r;
+			r = arc4random();
 			h->out[POS_AUTH+i] = (u_char)r;
 			h->out[POS_AUTH+i+1] = (u_char)(r >> 8);
 		}
@@ -926,9 +969,9 @@ rad_cvt_string(const void *data, size_t len)
  * returns -1.
  */
 int
-rad_get_attr(struct rad_handle *h, const void **value, size_t *len)
+rad_get_attr(struct rad_handle *h, const void **value, size_t *lenp)
 {
-	int type;
+	int len, type;
 
 	if (h->in_pos >= h->in_len)
 		return 0;
@@ -937,13 +980,19 @@ rad_get_attr(struct rad_handle *h, const void **value, size_t *len)
 		return -1;
 	}
 	type = h->in[h->in_pos++];
-	*len = h->in[h->in_pos++] - 2;
-	if (h->in_pos + (int)*len > h->in_len) {
+	len = h->in[h->in_pos++];
+	if (len < 2) {
 		generr(h, "Malformed attribute in response");
 		return -1;
 	}
+	len -= 2;
+	if (h->in_pos + len > h->in_len) {
+		generr(h, "Malformed attribute in response");
+		return -1;
+	}
+	*lenp = len;
 	*value = &h->in[h->in_pos];
-	h->in_pos += *len;
+	h->in_pos += len;
 	return type;
 }
 
@@ -1050,14 +1099,9 @@ rad_auth_open(void)
 
 	h = (struct rad_handle *)malloc(sizeof(struct rad_handle));
 	if (h != NULL) {
-#ifdef __linux__
-		srandom((unsigned long)time(NULL));
-#else
-		srandomdev();
-#endif
 		h->fd = -1;
 		h->num_servers = 0;
-		h->ident = random();
+		h->ident = arc4random();
 		h->errmsg[0] = '\0';
 		memset(h->pass, 0, sizeof h->pass);
 		h->pass_len = 0;
@@ -1178,8 +1222,8 @@ rad_put_string(struct rad_handle *h, int type, const char *str)
 int
 rad_put_message_authentic(struct rad_handle *h)
 {
-#ifdef __has_md5_hmac__
-	u_char md_zero[__md5_digest_length];
+#ifdef WITH_SSL
+	u_char md_zero[MD5_DIGEST_LENGTH];
 
 	if (h->out[POS_CODE] == RAD_ACCOUNTING_REQUEST) {
 		generr(h, "Message-Authenticator is not valid"
@@ -1432,8 +1476,8 @@ rad_demangle(struct rad_handle *h, const void *mangled, size_t mlen)
 	char R[LEN_AUTH];
 	const char *S;
 	int i, Ppos;
-	__md5_ctx Context;
-	u_char b[__md5_digest_length], *C, *demangled;
+	MD5_CTX Context;
+	u_char b[MD5_DIGEST_LENGTH], *C, *demangled;
 
 	if ((mlen % 16 != 0) || mlen > 128) {
 		generr(h, "Cannot interpret mangled data of length %lu",
@@ -1456,10 +1500,10 @@ rad_demangle(struct rad_handle *h, const void *mangled, size_t mlen)
 	if (!demangled)
 		return NULL;
 
-	__md5_init(&Context);
-	__md5_update(&Context, S, strlen(S));
-	__md5_update(&Context, R, LEN_AUTH);
-	__md5_finish(&Context, b);
+	MD5Init(&Context);
+	MD5Update(&Context, S, strlen(S));
+	MD5Update(&Context, R, LEN_AUTH);
+	MD5Final(b, &Context);
 	Ppos = 0;
 	while (mlen) {
 
@@ -1468,10 +1512,10 @@ rad_demangle(struct rad_handle *h, const void *mangled, size_t mlen)
 			demangled[Ppos++] = C[i] ^ b[i];
 
 		if (mlen) {
-			__md5_init(&Context);
-			__md5_update(&Context, S, strlen(S));
-			__md5_update(&Context, C, 16);
-			__md5_finish(&Context, b);
+			MD5Init(&Context);
+			MD5Update(&Context, S, strlen(S));
+			MD5Update(&Context, C, 16);
+			MD5Final(b, &Context);
 		}
 
 		C += 16;
@@ -1486,9 +1530,9 @@ rad_demangle_mppe_key(struct rad_handle *h, const void *mangled,
 {
 	char R[LEN_AUTH];    /* variable names as per rfc2548 */
 	const char *S;
-	u_char b[__md5_digest_length], *demangled;
+	u_char b[MD5_DIGEST_LENGTH], *demangled;
 	const u_char *A, *C;
-	__md5_ctx Context;
+	MD5_CTX Context;
 	int Slen, i, Clen, Ppos;
 	u_char *P;
 
@@ -1511,11 +1555,11 @@ rad_demangle_mppe_key(struct rad_handle *h, const void *mangled,
 	Slen = strlen(S);
 	P = alloca(Clen);        /* We derive our plaintext */
 
-	__md5_init(&Context);
-	__md5_update(&Context, S, Slen);
-	__md5_update(&Context, R, LEN_AUTH);
-	__md5_update(&Context, A, SALT_LEN);
-	__md5_finish(&Context, b);
+	MD5Init(&Context);
+	MD5Update(&Context, S, Slen);
+	MD5Update(&Context, R, LEN_AUTH);
+	MD5Update(&Context, A, SALT_LEN);
+	MD5Final(b, &Context);
 	Ppos = 0;
 
 	while (Clen) {
@@ -1525,10 +1569,10 @@ rad_demangle_mppe_key(struct rad_handle *h, const void *mangled,
 		    P[Ppos++] = C[i] ^ b[i];
 
 		if (Clen) {
-			__md5_init(&Context);
-			__md5_update(&Context, S, Slen);
-			__md5_update(&Context, C, 16);
-			__md5_finish(&Context, b);
+			MD5Init(&Context);
+			MD5Update(&Context, S, Slen);
+			MD5Update(&Context, C, 16);
+			MD5Final(b, &Context);
 		}
 
 		C += 16;

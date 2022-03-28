@@ -1,4 +1,6 @@
 /*-
+ * SPDX-License-Identifier: BSD-2-Clause-FreeBSD
+ *
  * Copyright 1998 Juniper Networks, Inc.
  * All rights reserved.
  *
@@ -23,7 +25,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	$FreeBSD: releng/10.2/lib/libradius/radlib_private.h 243956 2012-12-06 19:00:37Z sem $
+ *	$FreeBSD$
  */
 
 #ifndef RADLIB_PRIVATE_H
