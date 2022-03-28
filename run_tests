@@ -2,31 +2,11 @@
 
 errors=0
 
-# OpenSSL as found in system locations
-gmake WITH_SSL_IMPL=openssl test
+gmake test
 if [ $? -ne 0 ]
 then
 	errors=$(( errors + 1 ))
 fi
-
-# LibreSSL has pkg-config descriptors
-env CFLAGS="$( pkg-config --cflags-only-I libcrypto )" LDFLAGS="$( pkg-config --lflags-only-L libcrypto )" \
-gmake WITH_SSL_IMPL=openssl test
-if [ $? -ne 0 ]
-then
-	errors=$(( errors + 1 ))
-fi
-
-# mbed TLS as found in /usr/local (no pkg-config descriptors)
-env CFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" \
-gmake WITH_SSL_IMPL=mbedtls test
-if [ $? -ne 0 ]
-then
-	errors=$(( errors + 1 ))
-fi
-
-# PolarSSL and mbed TLS apparently cannot coexist, so PolarSSL
-# tests are not done.
 
 if [ ${errors} -eq 0 ]
 then
