@@ -2,7 +2,7 @@
 ifdef DEBUG
 CFLAGS		+= -g3 -ggdb3
 else
-CFLAGS		+= -Os
+CFLAGS		+= -O1
 endif
 
 CFLAGS		+= -fPIC -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes
