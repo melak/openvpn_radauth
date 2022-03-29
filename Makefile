@@ -39,10 +39,12 @@ $(PROG):	clean $(OBJS)
 		$(CC) -o $(PROG) $(OBJS) $(LDFLAGS)
 
 test:		clean
+		$(MAKE) -C test
 		$(MAKE) BUILD_TEST=1
 		./test_build
 
 clean:
+		$(MAKE) -C test clean
 		$(MAKE) -C libradius clean
 		-rm -f *.o core core.* $(PROG)
 
