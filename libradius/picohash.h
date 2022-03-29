@@ -36,10 +36,10 @@
 #define PICOHASH_MD5_DIGEST_LENGTH 16
 
 typedef struct {
-    uint_fast32_t lo, hi;
-    uint_fast32_t a, b, c, d;
+    uint32_t lo, hi;
+    uint32_t a, b, c, d;
     unsigned char buffer[64];
-    uint_fast32_t block[PICOHASH_MD5_DIGEST_LENGTH];
+    uint32_t block[PICOHASH_MD5_DIGEST_LENGTH];
 } _picohash_md5_ctx_t;
 
 static void _picohash_md5_init(_picohash_md5_ctx_t *ctx);
@@ -143,8 +143,8 @@ static void picohash_init_hmac(picohash_ctx_t *ctx, void (*initf)(picohash_ctx_t
 #define _PICOHASH_MD5_GET(n) _PICOHASH_MD5_SET(n)
 #else
 #define _PICOHASH_MD5_SET(n)                                                                                                       \
-    (ctx->block[(n)] = (uint_fast32_t)ptr[(n)*4] | ((uint_fast32_t)ptr[(n)*4 + 1] << 8) | ((uint_fast32_t)ptr[(n)*4 + 2] << 16) |  \
-                       ((uint_fast32_t)ptr[(n)*4 + 3] << 24))
+    (ctx->block[(n)] = (uint32_t)ptr[(n)*4] | ((uint32_t)ptr[(n)*4 + 1] << 8) | ((uint32_t)ptr[(n)*4 + 2] << 16) |  \
+                       ((uint32_t)ptr[(n)*4 + 3] << 24))
 #define _PICOHASH_MD5_GET(n) (ctx->block[(n)])
 #endif
 
@@ -155,8 +155,8 @@ static void picohash_init_hmac(picohash_ctx_t *ctx, void (*initf)(picohash_ctx_t
 static const void *_picohash_md5_body(_picohash_md5_ctx_t *ctx, const void *data, size_t size)
 {
     const unsigned char *ptr;
-    uint_fast32_t a, b, c, d;
-    uint_fast32_t saved_a, saved_b, saved_c, saved_d;
+    uint32_t a, b, c, d;
+    uint32_t saved_a, saved_b, saved_c, saved_d;
 
     ptr = data;
 
@@ -272,7 +272,7 @@ inline void _picohash_md5_init(_picohash_md5_ctx_t *ctx)
 
 inline void _picohash_md5_update(_picohash_md5_ctx_t *ctx, const void *data, size_t size)
 {
-    uint_fast32_t saved_lo;
+    uint32_t saved_lo;
     unsigned long used, free;
 
     saved_lo = ctx->lo;
