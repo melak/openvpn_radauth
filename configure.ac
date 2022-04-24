@@ -7,27 +7,6 @@ AC_PROG_CC
 AC_PROG_RANLIB
 AM_PROG_AR
 
-m4_cleardivert([HELP_BEGIN])dnl
-m4_divert_push([HELP_BEGIN])dnl
-if test "$ac_init_help" = "long"; then
-  cat <<_ACEOF
-\`configure' configures AC_PACKAGE_STRING
-
-Usage: $[0] [[OPTION]]... [[VAR=VALUE]]...
-
-Package-specific options:
-
-  --with-radius-config=PATH    path to libradius configuration file
-  --enable-debug               Emit some debug messages to syslog (not very useful)
-  --enable-bundled-libradius   Always use bundled libradius
-
-All the usual Autoconf options and conventions are accepted as well.
-
-_ACEOF
-  exit 0
-fi
-m4_divert_pop([HELP_BEGIN])dnl
-
 AC_ARG_WITH(radius-config,
     [AS_HELP_STRING([--with-radius-config=PATH], [path to libradius configuration file])],
     [
