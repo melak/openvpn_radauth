@@ -1,6 +1,4 @@
 
-include		../Makefile.rules
-
 SRCS		 = picohash.c
 PROG		 = $(SRCS:.c=)
 
