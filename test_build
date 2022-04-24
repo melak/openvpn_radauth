@@ -16,6 +16,10 @@ errors=0
 
 : ${MAKE:=make}
 ${MAKE} distclean
+
+${MAKE} -C test || { echo "picohash test failed"; exit 1; }
+
+
 [ -e ./configure ] || autoreconf -ivf
 ./configure --with-radius-config="${radius_conf}" --enable-debug
 ${MAKE}
