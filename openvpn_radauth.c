@@ -14,9 +14,10 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#if HAVE_LIBBSD == 1
+#ifdef HAVE_LIBBSD
 #include <bsd/string.h>
 #endif
 #include <syslog.h>
@@ -42,6 +43,17 @@ int main( int argc, char **argv )
 	int res;
 
 	res = OPENVPN_AUTH_FAIL;
+
+	if( argc >= 2 &&
+	    (strcmp(argv[1], "-h") == 0 ||
+	     strcmp(argv[1], "-help") == 0 ||
+	     strcmp(argv[1], "--help") == 0)
+	) {
+		fprintf(stderr, "%s: RADIUS authentication script for OpenVPN\n", __progname);
+		fprintf(stderr, "See https://github.com/melak/openvpn_radauth for instructions.\n");
+
+		goto out;
+	}
 
 	openlog( __progname, LOG_PID|LOG_NDELAY, LOG_AUTH );
 

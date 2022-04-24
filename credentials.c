@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#if HAVE_LIBBSD == 1
+#ifdef HAVE_LIBBSD
 #include <bsd/string.h>
 #endif
 #include <syslog.h>
