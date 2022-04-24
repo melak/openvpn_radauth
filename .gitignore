@@ -17,3 +17,12 @@
 *.app
 
 openvpn_radauth
+
+Makefile
+Makefile.in
+.deps
+*.m4
+autom4te.cache
+build-aux
+config.*
+configure
