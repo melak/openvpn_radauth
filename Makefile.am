@@ -9,7 +9,7 @@ openvpn_radauth_LDADD += -lbsd
 endif
 endif
 
-bin_PROGRAMS = openvpn_radauth
+sbin_PROGRAMS = openvpn_radauth
 openvpn_radauth_SOURCES = openvpn_radauth.c credentials.c
 
 test:
