@@ -37,7 +37,8 @@ demand for such a feature, it is possible to implement something to that effect.
 
 # Building
 
-Run `./configure --help`. Most of the canned output is junk.
+Have the AutoTools suite installed. `autoreconf -ivf`, then `./configure --help`.
+Most of the canned output is junk.
 
 libradius has been slightly modified so that it uses [picohash](https://github.com/kazuho/picohash)
 for all its hashing and HMAC'ing needs.
