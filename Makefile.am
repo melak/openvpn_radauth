@@ -8,3 +8,8 @@ endif
 
 bin_PROGRAMS = openvpn_radauth
 openvpn_radauth_SOURCES = openvpn_radauth.c credentials.c
+
+test:
+	./test_build
+
+.PHONY: test

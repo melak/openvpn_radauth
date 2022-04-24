@@ -14,6 +14,12 @@ failure=1
 
 errors=0
 
+: ${MAKE:=make}
+${MAKE} distclean
+[ -e ./configure ] || autoreconf -ivf
+./configure --with-radius-config="${radius_conf}" --enable-debug
+${MAKE}
+
 test_via_env()
 {
 	username="$1"
@@ -100,6 +106,9 @@ test "${nonexistent_username}" "${bad_password}" ${failure}
 test "${nonexistent_username}" "${ok_password}" ${failure}
 
 echo "finished testing"
+
+${MAKE} clean
+
 if [ ${errors} -eq 0 ]
 then
 	echo "all tests successful"

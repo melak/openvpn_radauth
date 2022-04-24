@@ -7,6 +7,29 @@ AC_PROG_CC
 AC_PROG_RANLIB
 AM_PROG_AR
 
+AC_ARG_WITH(radius-config,
+    [AS_HELP_STRING([--with-radius-config=PATH], [path to libradius configuration file])],
+    [
+        AS_IF([test "x${with_radius_config%${with_radius_config#?}}" != x/],
+            [AC_MSG_ERROR([--with-radius-config must specify an absolute path])],
+	    [radius_config="${with_radius_config}"]
+        )
+    ],
+    [
+        radius_config="/etc/openvpn/radius.conf"
+    ]
+)
+AC_DEFINE_UNQUOTED([OPENVPN_RADIUS_CONF], ["${radius_config}"])
+AC_MSG_NOTICE([using libradius configuration file ${radius_config}])
+
+AC_ARG_ENABLE(debug,
+    [AS_HELP_STRING([--enable-debug], [Emit some debug messages to syslog (not very useful)])],
+    [
+        AC_DEFINE([DEBUG])
+    ],
+    []
+)
+
 AC_SEARCH_LIBS([strlcpy], [], [], [
     PKG_CHECK_MODULES(LIBBSD, [libbsd >= 0.8.0], [have_LIBBSD=1])
 ])
