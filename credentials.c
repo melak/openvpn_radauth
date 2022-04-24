@@ -17,6 +17,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if HAVE_LIBBSD == 1
+#include <bsd/string.h>
+#endif
 #include <syslog.h>
 
 #include "credentials.h"

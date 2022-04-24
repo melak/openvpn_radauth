@@ -50,7 +50,7 @@ __FBSDID("$FreeBSD$");
 #endif
 #endif
 
-#ifdef __linux__
+#if HAVE_LIBBSD == 1
 #include <bsd/stdlib.h>
 #endif
 #include "picohash.h"
@@ -77,6 +77,9 @@ __FBSDID("$FreeBSD$");
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if HAVE_LIBBSD == 1
+#include <bsd/string.h>
+#endif
 #ifdef __linux__
 #include <time.h>
 #endif
