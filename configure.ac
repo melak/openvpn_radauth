@@ -46,8 +46,15 @@ AC_SEARCH_LIBS([arc4random], [], [], [
     [])
 ])
 AS_IF([test "x$have_LIBBSD" = x1], [AC_DEFINE([HAVE_LIBBSD])])
+AM_CONDITIONAL([HAVE_LIBBSD], [test "x$have_LIBBSD" = x1])
 
-AC_SEARCH_LIBS([rad_auth_open], [radius], [], [use_BUNDLED_LIBRADIUS=1])
+AC_ARG_ENABLE(bundled-libradius,
+    [AS_HELP_STRING([--enable-bundled-libradius], [Always use bundled libradius])],
+    [use_BUNDLED_LIBRADIUS=1],
+    [
+        AC_SEARCH_LIBS([rad_auth_open], [radius], [], [use_BUNDLED_LIBRADIUS=1])
+    ]
+)
 AM_CONDITIONAL([BUNDLED_LIBRADIUS], [test "x$use_BUNDLED_LIBRADIUS" = x1])
     
 AC_CONFIG_FILES([Makefile libradius/Makefile])
