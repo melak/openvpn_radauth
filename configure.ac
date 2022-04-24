@@ -1,4 +1,4 @@
-AC_INIT([openvpn_radauth], [1.0])
+AC_INIT([openvpn_radauth], [1.1])
 AC_CONFIG_SRCDIR([openvpn_radauth.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])

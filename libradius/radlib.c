@@ -28,9 +28,6 @@
 
 #if 0
 #include <sys/cdefs.h>
-#endif
-
-#ifdef __FreeBSD__
 __FBSDID("$FreeBSD$");
 #endif
 

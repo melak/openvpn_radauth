@@ -12,7 +12,7 @@ endif
 sbin_PROGRAMS = openvpn_radauth
 openvpn_radauth_SOURCES = openvpn_radauth.c credentials.c
 
-test:
-	./test_build
-
 .PHONY: test
+test:
+	$(MAKE) -C test
+	./test_build
