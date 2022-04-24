@@ -37,7 +37,7 @@ demand for such a feature, it is possible to implement something to that effect.
 
 # Building
 
-GNU Make is needed for building.
+Run `./configure --help`. Most of the canned output is junk.
 
 libradius has been slightly modified so that it uses [picohash](https://github.com/kazuho/picohash)
 for all its hashing and HMAC'ing needs.
